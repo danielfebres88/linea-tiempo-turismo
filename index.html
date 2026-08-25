@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Línea del tiempo · Ocio y Turismo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Línea del tiempo de la evolución del ocio y el turismo a lo largo de la historia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --bg:#f2f5ef; --panel:#ffffff; --ink:#1f261d; --soft:#5e6a5a; --line:#dde4d7;
+    --brand:#14562b; --brand-dark:#0d3a1d; --brand-2:#1c7a3f;
+    --accent:#e07b1e;               /* naranja Externado */
+    --gold:#c9a227;
+    --greek:#1c6b3a; --greek-soft:#e7f0ea;   /* Grecia = verde */
+    --rome:#a85d1c;  --rome-soft:#f6ecdd;     /* Roma = ocre */
+    --shadow:0 10px 30px rgba(20,50,25,.10);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4,.serif{font-family:"Fraunces",Georgia,serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px 70px}
+  a{color:var(--brand)}
+
+  /* HERO — verde Externado */
+  .hero{position:relative;text-align:center;color:#fff;overflow:hidden;
+    background:linear-gradient(135deg,#14562b 0%,#0d3a1d 100%);border-bottom:4px solid var(--gold)}
+  .hero .bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .hero .veil{position:absolute;inset:0;z-index:1;
+    background:linear-gradient(135deg,rgba(20,86,43,.78),rgba(13,58,29,.86))}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;opacity:.5;
+    background:radial-gradient(1200px 260px at 50% -40%,rgba(255,255,255,.14),transparent 70%)}
+  .hero .inner{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:54px 22px 40px}
+  .kicker{letter-spacing:.24em;text-transform:uppercase;font-size:12.5px;color:#e9d9a6;font-weight:600}
+  .hero h1{font-size:clamp(28px,5vw,50px);line-height:1.1;margin:12px 0 12px;font-weight:700}
+  .hero p{font-size:clamp(15px,1.8vw,18px);color:#eef3ea;max-width:760px;margin:0 auto}
+
+  /* Integrantes */
+  .team{position:relative;z-index:2;margin:26px auto 0;max-width:760px;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:14px 16px}
+  .team .lab{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#e9d9a6;font-weight:600;margin-bottom:10px}
+  .team .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .member{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+    border-radius:999px;padding:6px 14px 6px 6px;color:#fff;font-size:13px}
+  .member .av{width:26px;height:26px;border-radius:50%;background:var(--gold);color:#0d3a1d;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-family:"Fraunces",serif}
+
+  /* Secciones */
+  .section-title{text-align:center;margin:52px 0 6px}
+  .section-title h2{font-size:clamp(22px,3.2vw,30px);color:var(--brand-dark)}
+  .section-title p{color:var(--soft);margin:6px auto 0;max-width:640px;font-size:14.5px}
+
+  .context{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+  .civ{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
+  .civ.greek{border-top:6px solid var(--greek)} .civ.rome{border-top:6px solid var(--rome)}
+  .civ h3{font-size:21px;margin:0 0 4px} .civ.greek h3{color:var(--greek)} .civ.rome h3{color:var(--rome)}
+  .civ .tag{font-size:11.5px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.08em}
+  .civ p{margin:8px 0 0;font-size:13.7px;color:#3a4238} .civ b{color:var(--ink)}
+
+  #map{height:420px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow);margin-top:22px}
+  .maphint{text-align:center;font-size:12.5px;color:var(--soft);margin-top:8px}
+
+  .filters{position:sticky;top:0;z-index:20;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center;
+    padding:14px 0;margin-top:26px;background:linear-gradient(var(--bg) 72%,transparent)}
+  .filters .flab{font-size:12px;color:var(--soft);margin-right:2px}
+  .filters button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:999px;padding:9px 18px;font-size:13px;font-weight:600;font-family:"Inter";transition:.15s}
+  .filters button:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .filters button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .filters button[data-f="greek"].active{background:var(--greek);border-color:var(--greek)}
+  .filters button[data-f="rome"].active{background:var(--rome);border-color:var(--rome)}
+
+  /* TIMELINE */
+  .timeline{position:relative;margin-top:8px}
+  .timeline::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;
+    background:linear-gradient(var(--greek),var(--gold),var(--rome),#9aa39a);transform:translateX(-50%);border-radius:3px}
+  .epoch{position:relative;z-index:3;text-align:center;margin:34px 0 10px}
+  .epoch span{display:inline-block;background:var(--brand);color:#fff;font-family:"Fraunces",serif;font-weight:700;
+    padding:9px 22px;border-radius:999px;font-size:16px;box-shadow:var(--shadow);border:2px solid #fff}
+  .epoch.pending span{background:#7c847a}
+
+  .node{position:relative;width:50%;padding:16px 34px;margin:6px 0}
+  .node.left{left:0} .node.right{left:50%}
+  .dot{position:absolute;top:34px;width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--gold);z-index:2;box-shadow:0 0 0 4px var(--bg)}
+  .node.left .dot{right:-10px} .node.right .dot{left:-10px}
+  .node.greek .dot{border-color:var(--greek)} .node.rome .dot{border-color:var(--rome)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);transition:transform .18s, box-shadow .18s}
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(20,50,25,.16)}
+  .media{position:relative;height:210px;background:#dfe6d8;overflow:hidden;display:block}
+  .media img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+  .card:hover .media img{transform:scale(1.05)}
+  .media iframe{width:100%;height:100%;border:0;display:block}
+  .credit{position:absolute;left:0;right:0;bottom:0;font-size:10.5px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.78));padding:18px 12px 7px;pointer-events:none}
+  .zoom{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;font-size:11px;padding:4px 10px;pointer-events:none}
+  .body{padding:15px 18px 18px}
+  .cardhead{display:flex;align-items:center;gap:10px}
+  .date{display:inline-block;font-weight:700;font-size:12px;letter-spacing:.03em;color:#fff;background:var(--gold);padding:4px 12px;border-radius:999px}
+  .node.greek .date{background:var(--greek)} .node.rome .date{background:var(--rome)}
+  .kh{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--brand-2)}
+  .node.rome .kh{color:var(--rome)}
+  .body h3{font-size:19px;line-height:1.2;margin:8px 0 8px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{font-size:11px;font-weight:600;border-radius:999px;padding:3px 10px;border:1px solid var(--line)}
+  .chip.k{background:var(--greek-soft);color:var(--greek);border-color:#cfe2d5}
+  .node.rome .chip.k{background:var(--rome-soft);color:var(--rome);border-color:#ecd9c1}
+  .chip.m{background:#f6efd9;color:#8a6d12;border-color:#ecdfb4}
+  .body p{margin:8px 0 0;font-size:13.4px;color:#3a4238}
+  .lbl{font-weight:700;color:var(--brand-dark)}
+  .fact{margin-top:11px;background:#fbf5e8;border-left:3px solid var(--accent);padding:9px 12px;border-radius:0 8px 8px 0;font-size:12.8px;font-style:italic;color:#5a4d34}
+  details{margin-top:10px} details summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--brand-2)}
+  .node.rome details summary{color:var(--rome)}
+  .node.mod .dot{border-color:var(--brand)}
+  .node.mod .date{background:var(--brand)}
+  .node.mod .kh{color:var(--brand-2)}
+  .node.mod .chip.k{background:#e6efe7;color:var(--brand);border-color:#cfe2d5}
+  .node.mod details summary{color:var(--brand)}
+  .src{margin-top:11px;font-size:11px;color:var(--soft);border-top:1px dashed var(--line);padding-top:8px}
+
+  /* Tarjetas "por completar" */
+  .todo{position:relative;z-index:3;max-width:720px;margin:10px auto 0;background:#fbfcf9;border:2px dashed #c4cebd;border-radius:16px;padding:18px 22px}
+  .todo h4{margin:0 0 6px;font-size:16px;color:var(--brand-dark)}
+  .todo .pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7c847a;background:#eef1ea;border:1px solid #d9e0d2;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+  .todo p{margin:6px 0 0;font-size:12.7px;color:#55604f}
+  .todo .fields{margin-top:8px;font-size:12px;color:#6a7365}
+  .todo .hint{margin-top:8px;font-size:12px;color:var(--brand-2);background:#eef5ee;border-radius:8px;padding:8px 10px}
+
+  /* Referencias + puente */
+  .band{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:44px;box-shadow:var(--shadow)}
+  .band h2{font-size:23px;margin:0;color:var(--brand-dark)} .band h2 span{color:var(--accent)}
+  .reads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .read{background:#f4f7f1;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .read h4{margin:0 0 5px;font-size:15px} .read p{margin:0;font-size:12.7px;color:#45503f}
+  .bridge{margin-top:26px;text-align:center;font-size:15px;color:var(--soft);border:2px dashed var(--line);border-radius:14px;padding:18px}
+  .bridge b{color:var(--rome)}
+
+  .refs{margin-top:14px}
+  .refs .r{font-size:12.5px;color:#3a4238;padding-left:26px;text-indent:-26px;margin:9px 0;line-height:1.45}
+  .refs .grp{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:700;margin:14px 0 6px}
+
+  footer{margin-top:22px;font-size:11.5px;color:var(--soft);border-top:1px solid var(--line);padding-top:16px}
+
+  @media (max-width:820px){
+    .context,.reads{grid-template-columns:1fr}
+    .timeline::before{left:22px}
+    .node{width:100%;left:0!important;padding:14px 6px 14px 46px}
+    .node.left .dot,.node.right .dot{left:12px;right:auto}
+    .epoch{text-align:left;padding-left:8px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <video class="bgv" autoplay muted loop playsinline poster="assets/img/poster_hero.jpg">
+    <source src="assets/video/intro_bg.mp4" type="video/mp4">
+  </video>
+  <div class="veil"></div>
+  <div class="inner">
+    <div class="kicker">Maestría en Planificación y Gestión del Turismo · Teoría del Turismo</div>
+    <h1>Evolución del ocio y el turismo a lo largo de la historia</h1>
+    <p>Un recorrido por cómo han cambiado el ocio, el tiempo libre y el viaje —desde la Antigüedad hasta la actualidad— y por las sociedades que en cada época los hicieron posibles.</p>
+    <div class="team">
+      <div class="lab">Integrantes del equipo</div>
+      <div class="row">
+        <span class="member"><span class="av">1</span>Estudiante 1</span>
+        <span class="member"><span class="av">2</span>Estudiante 2</span>
+        <span class="member"><span class="av">3</span>Estudiante 3</span>
+        <span class="member"><span class="av">4</span>Estudiante 4</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="section-title" data-aos="fade-up">
+    <h2>Edad Antigua · ¿cómo eran estas sociedades?</h2>
+    <p>Su organización social y su economía explican quién podía acceder al ocio y al viaje. (Cada época siguiente añadirá su propia descripción.)</p>
+  </div>
+  <section class="context">
+    <div class="civ greek" data-aos="fade-right">
+      <span class="tag">Grecia</span>
+      <h3>Ciudadanos y <i>scholé</i></h3>
+      <p><b>Organización social:</b> mundo de <i>polis</i> (ciudades-estado), sociedad estamental y esclavista (ciudadanos libres, metecos y esclavos). La democracia ateniense es de los ciudadanos.</p>
+      <p><b>Economía:</b> agraria, artesanal y de comercio marítimo. El trabajo esclavo libera al ciudadano para la política y el pensamiento: el ocio (<i>scholé</i>) es un privilegio de la ciudadanía.</p>
+    </div>
+    <div class="civ rome" data-aos="fade-left">
+      <span class="tag">Roma</span>
+      <h3><i>Otium</i> y ocio de masas</h3>
+      <p><b>Organización social:</b> República e Imperio, muy jerárquica (patricios, plebeyos, libertos y esclavos), unificada bajo la <i>Pax Romana</i>.</p>
+      <p><b>Economía:</b> esclavista, urbana y de conquista, con moneda común. La élite acumula excedente y tiempo libre, y el Estado organiza el ocio de masas (<i>panem et circenses</i>).</p>
+    </div>
+  </section>
+
+  <div class="section-title" data-aos="fade-up">
+    <h2>El mapa de la línea del tiempo</h2>
+    <p>Los lugares de cada etapa. Pasa el cursor por un punto para ver el hito (o haz clic). Usa los botones de abajo para filtrar por etapa.</p>
+  </div>
+  <div id="map" data-aos="zoom-in"></div>
+  <p class="maphint">Mapa base © OpenStreetMap · <span style="color:#1c6b3a">● Grecia</span> · <span style="color:#a85d1c">● Roma/Egipto</span> · <span style="color:#2e6f95">● 1848–1960</span> · <span style="color:#c9a227">● 1960–actualidad</span></p>
+
+  <div class="filters">
+    <span class="flab">Etapas:</span>
+    <button data-f="all" class="active">Ver todo</button>
+    <button data-f="antigua">Edad Antigua</button>
+    <button data-f="media">Edad Media</button>
+    <button data-f="renacimiento">Renacimiento</button>
+    <button data-f="xvii">S. XVII–1763</button>
+    <button data-f="1763">1763–1841</button>
+    <button data-f="1848">1848–1960</button>
+    <button data-f="1960">1960–Actualidad</button>
+  </div>
+
+  <div class="timeline" id="tl">
+
+    <div class="epoch" data-epoch="antigua"><span>Edad Antigua · Grecia y Roma</span></div>
+
+    <!-- 1 -->
+    <div class="node left greek" data-civ="greek" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/01_discobolo.jpg" data-glightbox="title: Discóbolo — atletismo griego; description: Copia romana en mármol. Wikimedia Commons.">
+          <img src="assets/img/01_discobolo.jpg" alt="Discóbolo, escultura del lanzador de disco">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Discóbolo (copia romana) · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">776 a.C.</span><span class="kh">Hito</span></div>
+          <h3>Juegos Olímpicos y panhelénicos</h3>
+          <div class="chips"><span class="chip k">Juegos panhelénicos</span><span class="chip m">Culto + espectáculo</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> se institucionalizan festivales religioso-deportivos que reúnen cada cuatro años a viajeros de toda la Hélade; una tregua sagrada (<i>ekecheiría</i>) garantiza el paso seguro.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Primer desplazamiento colectivo por espectáculo, culto y competición: el antecedente del viaje por ocio y del actual "turismo de eventos".</p></details>
+          <div class="fact">Se suspendían las guerras para que atletas y peregrinos viajaran seguros a Olimpia.</div>
+          <div class="src">Conexión: Miranda (2006) — el ocio como práctica social de raíz histórica. · Fuente: Casson (1974); Fernández Fuster (1991).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="node right greek" data-civ="greek" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/02_aristoteles.jpg" data-glightbox="title: Aristóteles; description: Busto en mármol. Wikimedia Commons (dominio público).">
+          <img src="assets/img/02_aristoteles.jpg" alt="Busto de Aristóteles">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Busto de Aristóteles · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. V–IV a.C.</span><span class="kh">Hito</span></div>
+          <h3>El ocio (<i>scholé</i>) y la felicidad (<i>eudaimonía</i>)</h3>
+          <div class="chips"><span class="chip k">scholé / eudaimonía</span><span class="chip m">Base conceptual</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Aristóteles define el ocio como el <i>fin</i> de la vida —contemplación, política y saber—, opuesto a la <i>ascholía</i>; la meta última es la felicidad o <i>eudaimonía</i>.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Raíz cultural del ocio como valor y de la felicidad como meta; base teórica de toda la historia del ocio y del turismo. De <i>scholé</i> viene "escuela".</p></details>
+          <div class="fact">Aristóteles: "un hombre que vive en la miseria jamás podrá ser feliz".</div>
+          <div class="src">Conexión: Alarcón (2015) — la felicidad/eudaimonía; Miranda (2006) — el ocio como fin, no como resto del trabajo. · Fuente: Aristóteles (Ética a Nicómaco, libro X; Política).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="node left greek" data-civ="greek" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/03_epidauro.jpg" data-glightbox="title: Teatro de Epidauro; description: Santuario de Asclepio. Wikimedia Commons.">
+          <img src="assets/img/03_epidauro.jpg" alt="Teatro de Epidauro">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Teatro de Epidauro · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. V–IV a.C.</span><span class="kh">Hito</span></div>
+          <h3>Oráculos, santuarios de salud y la <i>theoría</i></h3>
+          <div class="chips"><span class="chip k">theoría / asclepieia</span><span class="chip m">Culto + salud</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> surgen desplazamientos para consultar el oráculo (Delfos), sanar en los <i>asclepieia</i> (Epidauro, Cos) e "ir a ver" festivales (<i>theoría</i>).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Antecedentes del turismo religioso y del turismo de salud/termal; la <i>theoría</i> prefigura el viaje por contemplación (raíz de "teoría").</p></details>
+          <div class="fact">En Epidauro los enfermos dormían en el santuario (<i>incubatio</i>) esperando la cura del dios Asclepio.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) — ocio y tiempo libre ligados a la salud y la calidad de vida. · Fuente: Casson (1974); Fernández Fuster (1991).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="node right rome" data-civ="rome" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/04_coliseo.jpg" data-glightbox="title: Coliseo de Roma; description: Anfiteatro Flavio. Wikimedia Commons.">
+          <img src="assets/img/04_coliseo.jpg" alt="Coliseo de Roma">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Coliseo de Roma · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. I a.C. – I d.C.</span><span class="kh">Hito</span></div>
+          <h3>El <i>otium</i> romano y el ocio de masas</h3>
+          <div class="chips"><span class="chip k">otium / negotium</span><span class="chip m">Espectáculo</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> se distingue el <i>otium</i> (ocio) del <i>negotium</i> (negocio). El Estado organiza el ocio de masas —circo y juegos— y multiplica los días festivos (<i>feriae</i>).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>El ocio se vuelve fenómeno social y político, de élite y de masas; se consolida el binomio trabajo/ocio que llega hasta hoy.</p></details>
+          <div class="fact">El calendario romano llegó a tener más de 100 días festivos al año — "pan y circo" (Juvenal).</div>
+          <div class="src">Conexión: Miranda (2006) — <i>otium/negotium</i> y el ocio como construcción social e histórica. · Fuente: Cicerón (De officiis); Miranda (2006).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="node left rome" data-civ="rome" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/05_tabula.jpg" data-glightbox="title: Tabula Peutingeriana; description: Mapa de calzadas romanas. Wikimedia Commons (dominio público).">
+          <img src="assets/img/05_tabula.jpg" alt="Detalle de la Tabula Peutingeriana">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Tabula Peutingeriana · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. I a.C. – II d.C.</span><span class="kh">Hito</span></div>
+          <h3>Calzadas, <i>Pax Romana</i> e <i>itineraria</i></h3>
+          <div class="chips"><span class="chip k">cursus / itineraria</span><span class="chip m">Infraestructura</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> por primera vez existen las condiciones para viajar lejos con seguridad y comodidad: calzadas, posadas (<i>mansiones</i>) y guías de ruta.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Aparece la infraestructura y el "sistema" del viaje: la base logística sin la cual el turismo posterior no sería posible.</p></details>
+          <div class="fact">~80.000 km de calzadas; la Tabula Peutingeriana, un mapa de rutas, mide casi 7 metros de largo.</div>
+          <div class="src">Conexión: Miranda (2006) — las condiciones materiales que hacen posible el viaje. · Fuente: Casson (1974); Fernández Fuster (1991).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 (VIDEO) -->
+    <div class="node right rome" data-civ="rome" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <div class="media">
+          <iframe src="https://www.youtube.com/embed/7tAiVtVZ6zI" title="Baiae, parque arqueológico sumergido" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. I d.C.</span><span class="kh">Hito</span></div>
+          <h3>Baiae: la <i>villegiatura</i> y el termalismo</h3>
+          <div class="chips"><span class="chip k">villegiatura / thermae</span><span class="chip m">Salud + placer</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> surge un destino estacional de placer —balnearios termales, villas de lujo y vida social junto al mar— en la bahía de Nápoles.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Antecedente directo del destino turístico, del turismo de sol y costa y del termalismo/turismo de salud.</p></details>
+          <div class="fact">Séneca criticaba Baiae por su lujo; hoy gran parte está sumergida y es un parque arqueológico submarino.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) — ocio, salud y calidad de vida. · Fuente: Casson (1974). · Video: Parque Arqueológico Sumergido de Baia (YouTube).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="node left rome" data-civ="rome" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/07_memnon.jpg" data-glightbox="title: Colosos de Memnón; description: Tebas, Egipto. Wikimedia Commons.">
+          <img src="assets/img/07_memnon.jpg" alt="Colosos de Memnón">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Colosos de Memnón · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">s. II d.C.</span><span class="kh">Hito</span></div>
+          <h3>Turismo cultural y la primera guía (Pausanias)</h3>
+          <div class="chips"><span class="chip k">Periégesis</span><span class="chip m">Cultura</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> romanos viajan a Grecia y Egipto a "ver" monumentos; Pausanias escribe la <i>Descripción de Grecia</i>, considerada la primera guía de viajes.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Nace el turismo cultural y patrimonial y el primer antecedente de la guía turística; prefigura el Grand Tour.</p></details>
+          <div class="fact">En los Colosos de Memnón se conservan ~100 grafitis de viajeros grecorromanos: los "turistas" de la Antigüedad.</div>
+          <div class="src">Conexión: puente hacia el Renacimiento y el Grand Tour. · Fuente: Pausanias (Descripción de Grecia); Casson (1974); Feifer (1985).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ESPACIOS POR COMPLETAR (equipo) ===== -->
+    <div class="epoch pending" data-epoch="media"><span>Edad Media</span></div>
+    <div class="todo" data-aos="fade-up">
+      <span class="pill">Por completar</span>
+      <h4>Edad Media</h4>
+      <p class="fields">Completar: características de la sociedad (organización social y economía) · hito(s) · ¿qué ocurre? · importancia para el ocio/turismo · dato o cita memorable · imagen/recurso con su fuente · referencia (APA).</p>
+      <div class="hint">Pista: peregrinaciones (Camino de Santiago desde el s. IX), hospederías y hospitales de peregrinos, ferias medievales, el ocio en Al-Ándalus. Sociedad feudal, economía agraria y gremial.</div>
+    </div>
+
+    <div class="epoch pending" data-epoch="renacimiento"><span>Renacimiento</span></div>
+    <div class="todo" data-aos="fade-up">
+      <span class="pill">Por completar</span>
+      <h4>Renacimiento</h4>
+      <p class="fields">Completar: sociedad y economía · hito(s) · ¿qué ocurre? · importancia · dato memorable · imagen/fuente · referencia (APA).</p>
+      <div class="hint">Pista: humanismo y redescubrimiento de la Antigüedad, la imprenta y las primeras guías impresas, viajes de descubrimiento. Auge de la burguesía y las ciudades.</div>
+    </div>
+
+    <div class="epoch pending" data-epoch="xvii"><span>Siglo XVII – 1763</span></div>
+    <div class="todo" data-aos="fade-up">
+      <span class="pill">Por completar</span>
+      <h4>Siglo XVII – 1763</h4>
+      <p class="fields">Completar: sociedad y economía · hito(s) · ¿qué ocurre? · importancia · dato memorable · imagen/fuente · referencia (APA).</p>
+      <div class="hint">Pista: el Grand Tour de la aristocracia por Europa, el termalismo y las ciudades-balneario (Bath, Spa), el gusto por lo pintoresco. Aristocracia e Ilustración.</div>
+    </div>
+
+    <div class="epoch pending" data-epoch="1763"><span>1763 – 1841</span></div>
+    <div class="todo" data-aos="fade-up">
+      <span class="pill">Por completar</span>
+      <h4>1763 – 1841</h4>
+      <p class="fields">Completar: sociedad y economía · hito(s) · ¿qué ocurre? · importancia · dato memorable · imagen/fuente · referencia (APA).</p>
+      <div class="hint">Pista: Romanticismo y baños de mar, precursores del viaje moderno, primeros ferrocarriles. Cierra en 1841 con el primer viaje organizado de Thomas Cook.</div>
+    </div>
+
+    <div class="epoch" data-epoch="1848"><span>1848 – 1960 · Globalización del turismo</span></div>
+    <p class="maphint">Investigación: Dilvana Rincón · Sociedad industrial y de posguerra: clase media en ascenso, movimiento obrero que conquista derechos, economía industrial-capitalista (ferrocarril, vapor, producción en masa y aviación).</p>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m01_gran_exposicion.jpg" data-glightbox="title: Gran Exposición de Londres (1851); description: Wikimedia Commons (dominio público).">
+          <img src="assets/img/m01_gran_exposicion.jpg" alt="Gran Exposición de Londres, Crystal Palace 1851">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Gran Exposición de Londres, 1851 · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1851</span><span class="kh">Hito</span></div>
+          <h3>Thomas Cook y la Gran Exposición de Londres</h3>
+          <div class="chips"><span class="chip k">Paquete turístico</span><span class="chip m">Ocio + cultura</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Thomas Cook organiza el traslado de más de 165.000 personas a la Gran Exposición con billetes de ferrocarril integrados y consolida sus excursiones organizadas.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Sienta las bases de la agencia de viajes y del paquete turístico masivo: el viaje deja de ser solo de élites.</p></details>
+          <div class="fact">Llevó a unas 165.000 personas al Crystal Palace con billetes integrados.</div>
+          <div class="src">Conexión: Miranda (2006) — el viaje organizado empieza a abrir el ocio a los trabajadores. · Fuente: Withey (1997); Fernández Fuster (1991).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m02_orient_express.jpg" data-glightbox="title: Orient Express; description: Tarjeta postal histórica. Wikimedia Commons (dominio público).">
+          <img src="assets/img/m02_orient_express.jpg" alt="Orient Express, tarjeta postal">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Orient Express (postal histórica) · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1883</span><span class="kh">Hito</span></div>
+          <h3>Orient Express</h3>
+          <div class="chips"><span class="chip k">Turismo de lujo</span><span class="chip m">Placer + prestigio</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> La Compagnie Internationale des Wagons-Lits inaugura el Orient Express, que conecta París con Estambul con lujo a bordo.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Introduce la hotelería de lujo en movimiento y fija un estándar internacional de confort en el viaje.</p></details>
+          <div class="fact">Unió París y Constantinopla (Estambul) y se volvió símbolo del viaje de lujo.</div>
+          <div class="src">Conexión: Alarcón (2015) — el viaje como experiencia y símbolo de estatus. · Fuente: Des Cars (1988).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m03_ford_t.jpg" data-glightbox="title: Ford Modelo T; description: Wikimedia Commons.">
+          <img src="assets/img/m03_ford_t.jpg" alt="Ford Modelo T">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Ford Modelo T · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1908</span><span class="kh">Hito</span></div>
+          <h3>El automóvil para las masas: Ford Modelo T</h3>
+          <div class="chips"><span class="chip k">Auto-turismo</span><span class="chip m">Ocio / excursión</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Ford lanza el Modelo T y la producción en cadena abarata el automóvil, poniéndolo al alcance de la clase media.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Nace el turismo por carretera: libertad de desplazamiento individual, rutas, moteles y estaciones de servicio.</p></details>
+          <div class="fact">La producción en cadena convirtió el automóvil en un bien de consumo masivo.</div>
+          <div class="src">Conexión: Miranda (2006) — con más tiempo libre y medios propios se amplían las prácticas de ocio. · Fuente: Fernández Fuster (1991).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m04_primer_vuelo.jpg" data-glightbox="title: Primer vuelo comercial (1914); description: St. Petersburg-Tampa Airboat Line. Wikimedia Commons (dominio público).">
+          <img src="assets/img/m04_primer_vuelo.jpg" alt="Primer vuelo comercial de pasajeros, 1914">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">St. Petersburg–Tampa Airboat Line, 1914 · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1914</span><span class="kh">Hito</span></div>
+          <h3>Primer vuelo comercial de pasajeros</h3>
+          <div class="chips"><span class="chip k">Aviación comercial</span><span class="chip m">Transporte / novedad</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> La St. Petersburg–Tampa Airboat Line (Florida) realiza el primer servicio aéreo comercial regular de pasajeros del mundo.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Demuestra la viabilidad del transporte aéreo de pasajeros: el germen de la aviación comercial.</p></details>
+          <div class="fact">El primer vuelo (1 de enero de 1914) duró unos 23 minutos.</div>
+          <div class="src">Conexión: antecedente que hará posible la masificación del viaje (Miranda, 2006). · Fuente: Davies (1998).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m05_ocho_horas.jpg" data-glightbox="title: Jornada de 8 horas; description: Estandarte del movimiento obrero. Wikimedia Commons (dominio público).">
+          <img src="assets/img/m05_ocho_horas.jpg" alt="Estandarte 8 horas de trabajo, recreación y descanso">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Estandarte de las 8 horas · Wikimedia Commons (dominio público)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1919 · antec. 1886</span><span class="kh">Hito</span></div>
+          <h3>La conquista de la jornada de 8 horas</h3>
+          <div class="chips"><span class="chip k">Jornada de 8 horas</span><span class="chip m">Derecho (condición del ocio)</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Tras décadas de lucha obrera (Haymarket, 1886, origen del 1.º de mayo), la OIT aprueba en 1919 su primer convenio: 8 horas diarias y 48 semanales.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Reducir la jornada crea el tiempo libre cotidiano: junto con las vacaciones pagadas, uno de los dos pilares del turismo de masas.</p></details>
+          <div class="fact">La consigna era "8 horas para trabajar, 8 para dormir y 8 para lo que queramos".</div>
+          <div class="src">Conexión: Miranda (2006) — el tiempo libre como derecho conquistado por los trabajadores (eje de su artículo). · Fuente: Miranda (2006).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m06_frente_popular_1936.jpg" data-glightbox="title: Frente Popular (Francia, 1936); description: Cámara de Diputados. Wikimedia Commons.">
+          <img src="assets/img/m06_frente_popular_1936.jpg" alt="Composición de la Cámara de Diputados francesa, 1936">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Cámara de Diputados, Frente Popular (Francia, 1936) · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1936</span><span class="kh">Hito</span></div>
+          <h3>Las vacaciones pagadas: el ocio como derecho</h3>
+          <div class="chips"><span class="chip k">Vacaciones pagadas</span><span class="chip m">Descanso / ocio</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> En Francia, el Frente Popular establece por ley las vacaciones pagadas (congés payés); el derecho al descanso se consagra luego en la DUDH (1948, art. 24).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Sin tiempo libre remunerado no hay turismo de masas: el ocio se vuelve un derecho social y dispara la demanda turística.</p></details>
+          <div class="fact">En 1936 millones de franceses acceden por primera vez a vacaciones pagadas.</div>
+          <div class="src">Conexión: Miranda (2006) — el ocio como conquista histórica de los trabajadores, base del turismo moderno. · Fuente: Miranda (2006); Hobsbawm (1975).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m07_iata.jpg" data-glightbox="title: IATA; description: Etiqueta de transporte aéreo. Wikimedia Commons.">
+          <img src="assets/img/m07_iata.jpg" alt="Etiqueta de transporte aéreo">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Etiqueta de transporte aéreo (IATA) · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1945</span><span class="kh">Hito</span></div>
+          <h3>Creación de la IATA</h3>
+          <div class="chips"><span class="chip k">Estandarización aérea</span><span class="chip m">Transporte / negocio</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> En La Habana se funda la Asociación Internacional de Transporte Aéreo (IATA), que estandariza tarifas, rutas, billetes y normas de seguridad.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Hace posible la interconexión de aerolíneas a escala global: ordena el sistema que sostendrá el turismo aéreo.</p></details>
+          <div class="fact">Fundada en 1945 en La Habana, al terminar la Segunda Guerra Mundial.</div>
+          <div class="src">Conexión: gobernanza e infraestructura que habilitan el turismo internacional. · Fuente: Doganis (2006).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m08_panam_rutas.jpg" data-glightbox="title: Era del jet (Boeing 707); description: Mapa de rutas de Pan Am. Wikimedia Commons.">
+          <img src="assets/img/m08_panam_rutas.jpg" alt="Mapa de rutas mundiales de Pan Am">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Mapa de rutas de Pan Am · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1958</span><span class="kh">Hito</span></div>
+          <h3>La era del jet: Boeing 707</h3>
+          <div class="chips"><span class="chip k">Era del jet</span><span class="chip m">Placer / larga distancia</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Pan Am inicia vuelos transatlánticos regulares con el Boeing 707 (París–Nueva York).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Reduce a la mitad los tiempos de viaje oceánico y da inicio al turismo internacional masivo por aire.</p></details>
+          <div class="fact">El 707 cruzaba el Atlántico en unas 7 horas, la mitad que antes.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) — el viaje como parte de la calidad de vida de la clase media. · Fuente: Davies (1998); Doganis (2006).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="epoch" data-epoch="1960"><span>1960 – Actualidad · Era digital</span></div>
+    <p class="maphint">Investigación: Dilvana Rincón · Sociedad globalizada, de consumo y digital: economía de servicios y plataformas, clase media viajera y creciente conciencia ambiental (sostenibilidad, overtourism).</p>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m09_boeing747.jpg" data-glightbox="title: Boeing 747; description: Wikimedia Commons.">
+          <img src="assets/img/m09_boeing747.jpg" alt="Boeing 747">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Boeing 747 · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1970</span><span class="kh">Hito</span></div>
+          <h3>Boeing 747: la era del Jumbo Jet</h3>
+          <div class="chips"><span class="chip k">Jumbo / masificación</span><span class="chip m">Placer / larga distancia</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Pan Am realiza el primer vuelo comercial del Boeing 747 (Nueva York–Londres, 22 de enero de 1970).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>El fuselaje ancho reduce el costo por asiento y democratiza el vuelo transcontinental: turismo masivo internacional.</p></details>
+          <div class="fact">El "Jumbo" multiplicó la capacidad por vuelo (unos 400 pasajeros).</div>
+          <div class="src">Conexión: Miranda (2006) — el tiempo libre conquistado se ejerce ahora a escala global. · Fuente: Davies (1998).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m10_omt.jpg" data-glightbox="title: OMT / ONU Turismo; description: Sede en Madrid. Wikimedia Commons.">
+          <img src="assets/img/m10_omt.jpg" alt="Sede de la OMT en Madrid">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Sede de la OMT / ONU Turismo, Madrid · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1975</span><span class="kh">Hito</span></div>
+          <h3>Creación de la OMT (Organización Mundial del Turismo)</h3>
+          <div class="chips"><span class="chip k">Gobernanza del turismo</span><span class="chip m">Institucional</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Se crea la OMT (hoy ONU Turismo), que coordina y promueve el turismo mundial y produce estadísticas y políticas.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Institucionaliza el turismo como sector económico y objeto de políticas públicas y gobernanza.</p></details>
+          <div class="fact">La OMT nace en 1975 como referente mundial del sector.</div>
+          <div class="src">Conexión: Miranda (2006) y gobernanza — el turismo se reconoce como derecho y política pública. · Fuente: OMT (ONU Turismo).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m11_lowcost.jpg" data-glightbox="title: Aerolíneas low-cost; description: Wikimedia Commons.">
+          <img src="assets/img/m11_lowcost.jpg" alt="Embarque en una aerolínea low-cost">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Embarque en una aerolínea low-cost · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1995</span><span class="kh">Hito</span></div>
+          <h3>Aerolíneas low-cost (Ryanair, EasyJet)</h3>
+          <div class="chips"><span class="chip k">Low-cost / city break</span><span class="chip m">Escapada urbana</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Tras la desregulación aérea de EE. UU. (1978), en los años 90 se expanden las low-cost en Europa (Ryanair, EasyJet).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Las tarifas bajísimas popularizan las escapadas de fin de semana (city breaks) como hábito de consumo global.</p></details>
+          <div class="fact">Volar dentro de Europa pasó a costar poco más que una cena.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) — el ocio como parte de la calidad de vida cotidiana. · Fuente: Doganis (2006).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m12_ota.jpg" data-glightbox="title: Agencias de viajes en línea (OTAs); description: Imagen ilustrativa.">
+          <img src="assets/img/m12_ota.jpg" alt="Agencia de viajes en línea (ilustrativa)">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Agencia de viajes en línea (imagen ilustrativa)</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">1996</span><span class="kh">Hito</span></div>
+          <h3>Agencias de viajes en línea (OTAs)</h3>
+          <div class="chips"><span class="chip k">OTA / desintermediación</span><span class="chip m">Planificación (tecnología)</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Nacen Expedia y Booking.com; el control de la reserva pasa de la agencia tradicional al consumidor final.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Descentraliza la distribución de vuelos y hoteles a escala planetaria: el viajero arma su propio viaje.</p></details>
+          <div class="fact">En 1996 arrancan Expedia y Booking.com, hoy gigantes del sector.</div>
+          <div class="src">Conexión: Alarcón (2015) — el viajero busca y diseña su propia experiencia. · Fuente: Harvard Business School (digital transformation of travel).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m13_airbnb.jpg" data-glightbox="title: Airbnb y economía colaborativa; description: Sede tecnológica. Wikimedia Commons.">
+          <img src="assets/img/m13_airbnb.jpg" alt="Sede tecnológica, economía de plataformas">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Economía de plataformas (sede tecnológica) · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">2008</span><span class="kh">Hito</span></div>
+          <h3>Airbnb y la economía colaborativa</h3>
+          <div class="chips"><span class="chip k">Economía colaborativa</span><span class="chip m">Alojamiento / experiencia</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> Se funda Airbnb (San Francisco); el modelo peer-to-peer (P2P) irrumpe en el alojamiento turístico.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Altera el modelo hotelero, redefine las dinámicas urbanas y abre el debate sobre la turistificación.</p></details>
+          <div class="fact">De alquilar un colchón inflable a millones de alojamientos en el mundo.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) — tensiones entre ocio, comunidad y calidad de vida. · Fuente: Banco Mundial (sharing economy).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node right mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m14_ods.jpg" data-glightbox="title: Agenda 2030 y ODS; description: Objetivos de Desarrollo Sostenible (ONU).">
+          <img src="assets/img/m14_ods.jpg" alt="Objetivos de Desarrollo Sostenible">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Objetivos de Desarrollo Sostenible (ONU) · imagen ilustrativa</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">2015</span><span class="kh">Hito</span></div>
+          <h3>Agenda 2030 y ODS: el giro a la sostenibilidad</h3>
+          <div class="chips"><span class="chip k">Turismo sostenible / overtourism</span><span class="chip m">Marco de gestión</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> La ONU adopta los ODS; el turismo sostenible entra al centro de la agenda (2017: Año Internacional del Turismo Sostenible).</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>La sostenibilidad y el overtourism pasan a ser el marco para planificar y gestionar destinos.</p></details>
+          <div class="fact">La ONU declaró 2017 Año Internacional del Turismo Sostenible.</div>
+          <div class="src">Conexión: Sánchez Tovar et al. (2013) y sostenibilidad — ocio y calidad de vida dentro de límites ambientales. · Fuente: OMT (ONU Turismo); Banco Mundial.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="node left mod" data-civ="mod" data-aos="fade-up">
+      <span class="dot"></span>
+      <div class="card">
+        <a class="media glightbox" href="assets/img/m15_covid.jpg" data-glightbox="title: COVID-19 y el turismo; description: Aeropuerto durante la pandemia (2020). Wikimedia Commons.">
+          <img src="assets/img/m15_covid.jpg" alt="Aeropuerto durante la pandemia de COVID-19">
+          <span class="zoom">⤢ ampliar</span>
+          <span class="credit">Aeropuerto durante la pandemia, 2020 · Wikimedia Commons</span>
+        </a>
+        <div class="body">
+          <div class="cardhead"><span class="date">2020</span><span class="kh">Hito</span></div>
+          <h3>COVID-19 y la disrupción global</h3>
+          <div class="chips"><span class="chip k">Disrupción / nómadas digitales</span><span class="chip m">Crisis y reconfiguración</span></div>
+          <p><span class="lbl">¿Qué ocurre?</span> El cierre masivo de fronteras reduce las llegadas internacionales cerca de un 73 % en 2020: el mayor shock de la historia del turismo.</p>
+          <details><summary>Importancia para el ocio/turismo</summary>
+            <p>Acelera el trabajo remoto (nómadas digitales), lo digital y el interés por la sostenibilidad y el turismo de menor densidad.</p></details>
+          <div class="fact">En 2020 las llegadas internacionales cayeron alrededor de un 73 % (Barómetro OMT).</div>
+          <div class="src">Conexión: Alarcón (2015) — se revalorizan el bienestar y la experiencia; Sánchez Tovar et al. (2013) — ocio y salud. · Fuente: OMT (Barómetro, enero 2021).</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <section class="band" data-aos="fade-up">
+    <h2>Conexión con las <span>lecturas del curso</span></h2>
+    <p style="font-size:13.5px;color:#45503f;margin-top:6px">La Edad Antigua no es una cronología suelta: dialoga con la teoría vista en clase.</p>
+    <div class="reads">
+      <div class="read"><h4>Miranda (2006)</h4><p>El <i>otium/negotium</i> y el ocio como construcción social e histórica; el tiempo libre que cada época significa a su manera.</p></div>
+      <div class="read"><h4>Sánchez Tovar et al. (2013)</h4><p>El vínculo ocio–salud–calidad de vida, que ya asoma en los santuarios de Asclepio y en el termalismo de Baiae.</p></div>
+      <div class="read"><h4>Alarcón (2015)</h4><p>La felicidad como <i>eudaimonía</i>: la raíz griega del bienestar subjetivo que hoy persigue el turismo experiencial.</p></div>
+    </div>
+    <div class="bridge">De los grafitis de Memnón y la guía de Pausanias, el hilo del viaje culto continúa en <b>la Edad Media y el Grand Tour</b> → <i>(los siguientes tramos de la línea del tiempo).</i></div>
+  </section>
+
+  <section class="band" data-aos="fade-up">
+    <h2>Referencias <span>(APA, 7.ª ed.)</span></h2>
+    <div class="refs">
+      <div class="grp">Lecturas del curso y bibliografía</div>
+      <div class="r">Alarcón, R. (2015). La idea de la felicidad. <i>Apuntes de Ciencia &amp; Sociedad, 5</i>(1), 6–9.</div>
+      <div class="r">Casson, L. (1974). <i>Travel in the ancient world</i>. George Allen &amp; Unwin.</div>
+      <div class="r">Feifer, M. (1985). <i>Tourism in history: From imperial Rome to the present</i>. Stein and Day.</div>
+      <div class="r">Fernández Fuster, L. (1991). <i>Historia general del turismo de masas</i>. Alianza Editorial.</div>
+      <div class="r">Miranda Román, G. (2006). El tiempo libre y ocio reivindicado por los trabajadores. <i>PASOS. Revista de Turismo y Patrimonio Cultural, 4</i>(3), 301–326.</div>
+      <div class="r">Sánchez Tovar, L., Jurado, L., &amp; Simões Brasileiro, M. D. (2013). Después del trabajo, ¿qué significado tiene el ocio, el tiempo libre y la salud? <i>Paradigma, 34</i>(1), 31–51.</div>
+      <div class="grp">Globalización del turismo, 1848–actualidad (investigación de Dilvana Rincón)</div>
+      <div class="r">Davies, R. E. G. (1998). <i>A history of the world's airlines</i>. Oxford University Press.</div>
+      <div class="r">Des Cars, J. (1988). <i>The Orient Express: The story of a legend</i>. Rizzoli.</div>
+      <div class="r">Doganis, R. (2006). <i>The airline business</i> (2.ª ed.). Routledge.</div>
+      <div class="r">Hobsbawm, E. (1975). <i>The age of capital: 1848–1875</i>. Weidenfeld &amp; Nicolson.</div>
+      <div class="r">Withey, L. (1997). <i>Grand tours and Cook's tours: A history of leisure travel, 1750–1915</i>. William Morrow.</div>
+      <div class="r">Organización Mundial del Turismo. (2021). <i>Barómetro OMT del turismo mundial</i> (enero 2021). ONU Turismo.</div>
+      <div class="grp">Fuentes primarias (obras clásicas)</div>
+      <div class="r">Aristóteles. (2014). <i>Ética a Nicómaco</i> (J. Pallí Bonet, Trad.). Gredos. (Obra original ca. 350 a. C.)</div>
+      <div class="r">Cicerón, M. T. (2014). <i>Sobre los deberes (De officiis)</i> (Trad.). Gredos. (Obra original ca. 44 a. C.)</div>
+      <div class="r">Pausanias. (2008). <i>Descripción de Grecia</i> (Trad.). Gredos. (Obra original ca. 175 d. C.)</div>
+      <div class="grp">Recurso audiovisual</div>
+      <div class="r">Lorre, C., &amp; Prady, B. (Creadores). (2007–2019). <i>The Big Bang Theory</i> [Serie de televisión]. Chuck Lorre Productions; Warner Bros. Television. Secuencia de apertura (time-lapse) utilizada en silencio como fondo decorativo de la cabecera, con fines exclusivamente académicos.</div>
+    </div>
+    <footer>
+      <b>Imágenes:</b> Wikimedia Commons (Creative Commons / dominio público). <b>Video:</b> YouTube. <b>Mapa:</b> © OpenStreetMap.<br>
+      <span style="color:#9aa39a">Maestría en Planificación y Gestión del Turismo · Teoría del Turismo.</span>
+    </footer>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  AOS.init({duration:650, once:true, offset:60});
+  GLightbox({selector:'.glightbox', loop:true});
+
+  // ---- Mapa (todas las etapas con datos) ----
+  const map=L.map('map',{scrollWheelZoom:false}).setView([40,5],3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12, attribution:'© OpenStreetMap'}).addTo(map);
+  const colors={greek:'#1c6b3a', rome:'#a85d1c', e1848:'#2e6f95', e1960:'#c9a227'};
+  const sites=[
+    {n:'Olimpia — Juegos Olímpicos (776 a.C.)', e:'antigua', g:'greek', ll:[37.6386,21.6300]},
+    {n:'Atenas — Aristóteles, scholé (s. V–IV a.C.)', e:'antigua', g:'greek', ll:[37.9838,23.7275]},
+    {n:'Epidauro — santuario de salud (s. V–IV a.C.)', e:'antigua', g:'greek', ll:[37.5960,23.0790]},
+    {n:'Roma — otium y Coliseo (s. I)', e:'antigua', g:'rome', ll:[41.8902,12.4922]},
+    {n:'Baiae — villegiatura y termas (s. I)', e:'antigua', g:'rome', ll:[40.8167,14.0736]},
+    {n:'Tebas, Egipto — Colosos de Memnón (s. II)', e:'antigua', g:'rome', ll:[25.7206,32.6106]},
+    {n:'Londres — Gran Exposición / Thomas Cook (1851)', e:'1848', g:'e1848', ll:[51.5007,-0.1246]},
+    {n:'París–Estambul — Orient Express (1883)', e:'1848', g:'e1848', ll:[48.8566,2.3522]},
+    {n:'Detroit — Ford Modelo T (1908)', e:'1848', g:'e1848', ll:[42.3314,-83.0458]},
+    {n:'San Petersburgo, Florida — primer vuelo comercial (1914)', e:'1848', g:'e1848', ll:[27.7676,-82.6403]},
+    {n:'Ginebra — OIT, jornada de 8 horas (1919)', e:'1848', g:'e1848', ll:[46.2044,6.1432]},
+    {n:'Francia — vacaciones pagadas (1936)', e:'1848', g:'e1848', ll:[46.8,2.4]},
+    {n:'La Habana — creación de la IATA (1945)', e:'1848', g:'e1848', ll:[23.1136,-82.3666]},
+    {n:'Nueva York — era del jet, Boeing 707 (1958)', e:'1848', g:'e1848', ll:[40.7128,-74.0060]},
+    {n:'Londres — Boeing 747, Jumbo (1970)', e:'1960', g:'e1960', ll:[51.5074,-0.1278]},
+    {n:'Madrid — creación de la OMT (1975)', e:'1960', g:'e1960', ll:[40.4168,-3.7038]},
+    {n:'Dublín — aerolíneas low-cost (1995)', e:'1960', g:'e1960', ll:[53.3498,-6.2603]},
+    {n:'Ámsterdam — OTAs, Booking/Expedia (1996)', e:'1960', g:'e1960', ll:[52.3676,4.9041]},
+    {n:'San Francisco — Airbnb (2008)', e:'1960', g:'e1960', ll:[37.7749,-122.4194]},
+    {n:'Nueva York, ONU — Agenda 2030 / ODS (2015)', e:'1960', g:'e1960', ll:[40.7489,-73.9680]},
+    {n:'Madrid–Barajas — COVID-19 (2020)', e:'1960', g:'e1960', ll:[40.4936,-3.5668]},
+  ];
+  const markers=sites.map(s=>{
+    const m=L.circleMarker(s.ll,{radius:7,color:'#fff',weight:2,fillColor:colors[s.g],fillOpacity:.95});
+    m.bindTooltip(s.n,{direction:'top'});
+    m.bindPopup('<b>'+s.n+'</b>');
+    m._epoch=s.e; m.addTo(map);
+    return m;
+  });
+  function fitMarkers(list){ if(list.length){ map.fitBounds(list.map(m=>m.getLatLng()),{padding:[40,40], maxZoom:6}); } }
+  fitMarkers(markers);
+
+  // ---- Filtro por etapas (línea del tiempo + mapa) ----
+  const btns=document.querySelectorAll('.filters button');
+  const tl=document.getElementById('tl');
+  function applyFilter(f){
+    let cur=null;
+    Array.from(tl.children).forEach(el=>{
+      if(el.classList && el.classList.contains('epoch')) cur=el.dataset.epoch;
+      el.style.display=(f==='all'||cur===f)?'':'none';
+    });
+    const shown=[];
+    markers.forEach(m=>{
+      const vis=(f==='all'||m._epoch===f);
+      if(vis){ if(!map.hasLayer(m)) m.addTo(map); shown.push(m); }
+      else if(map.hasLayer(m)) map.removeLayer(m);
+    });
+    setTimeout(()=>{ map.invalidateSize(); fitMarkers(shown); }, 60);
+  }
+  btns.forEach(b=>b.addEventListener('click',()=>{
+    btns.forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    const f=b.dataset.f;
+    applyFilter(f);
+    if(f!=='all'){ document.querySelector('.timeline').scrollIntoView({behavior:'smooth', block:'start'}); }
+  }));
+</script>
+</body>
+</html>
