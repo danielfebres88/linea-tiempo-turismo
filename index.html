@@ -31,7 +31,10 @@
   /* HERO — verde Externado */
   .hero{position:relative;text-align:center;color:#fff;overflow:hidden;
     background:linear-gradient(135deg,#14562b 0%,#0d3a1d 100%);border-bottom:4px solid var(--gold)}
-  .hero::after{content:"";position:absolute;inset:0;opacity:.5;
+  .hero .bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .hero .veil{position:absolute;inset:0;z-index:1;
+    background:linear-gradient(135deg,rgba(20,86,43,.78),rgba(13,58,29,.86))}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;opacity:.5;
     background:radial-gradient(1200px 260px at 50% -40%,rgba(255,255,255,.14),transparent 70%)}
   .hero .inner{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:54px 22px 40px}
   .kicker{letter-spacing:.24em;text-transform:uppercase;font-size:12.5px;color:#e9d9a6;font-weight:600}
@@ -150,6 +153,10 @@
 <body>
 
 <header class="hero">
+  <video class="bgv" autoplay muted loop playsinline poster="assets/img/poster_hero.jpg">
+    <source src="assets/video/intro_bg.mp4" type="video/mp4">
+  </video>
+  <div class="veil"></div>
   <div class="inner">
     <div class="kicker">Maestría en Planificación y Gestión del Turismo · Teoría del Turismo</div>
     <h1>Evolución del ocio y el turismo a lo largo de la historia</h1>
@@ -433,6 +440,8 @@
       <div class="r">Aristóteles. (2014). <i>Ética a Nicómaco</i> (J. Pallí Bonet, Trad.). Gredos. (Obra original ca. 350 a. C.)</div>
       <div class="r">Cicerón, M. T. (2014). <i>Sobre los deberes (De officiis)</i> (Trad.). Gredos. (Obra original ca. 44 a. C.)</div>
       <div class="r">Pausanias. (2008). <i>Descripción de Grecia</i> (Trad.). Gredos. (Obra original ca. 175 d. C.)</div>
+      <div class="grp">Recurso audiovisual</div>
+      <div class="r">Lorre, C., &amp; Prady, B. (Creadores). (2007–2019). <i>The Big Bang Theory</i> [Serie de televisión]. Chuck Lorre Productions; Warner Bros. Television. Secuencia de apertura (time-lapse) utilizada en silencio como fondo decorativo de la cabecera, con fines exclusivamente académicos.</div>
     </div>
     <footer>
       <b>Imágenes:</b> Wikimedia Commons (Creative Commons / dominio público). <b>Video:</b> YouTube. <b>Mapa:</b> © OpenStreetMap.<br>
